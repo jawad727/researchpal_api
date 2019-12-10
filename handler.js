@@ -6,7 +6,7 @@ const uuid = require("uuid/v4")
 
 const postsTable = process.env.POSTS_TABLE
 
-// create a response
+// Create a response
 
 function response(statusCode, message) {
   return {
@@ -19,7 +19,7 @@ function response(statusCode, message) {
   }
 }
 
-// create a post
+// Create a post
 module.exports.makePost = (event, context, callback) => {
   const reqBody = JSON.parse(event.body)
 
@@ -47,7 +47,7 @@ module.exports.makePost = (event, context, callback) => {
   .catch(err => response(null, response(err.statusCode, err)));
 }
 
-// get all posts
+// Get all posts
 module.exports.getAllPosts = (event, context, callback) => {
   return db.scan({
     TableName: postsTable
@@ -55,7 +55,25 @@ module.exports.getAllPosts = (event, context, callback) => {
   .then(res => {
     callback(null, response(201, res.Items))
   }).catch(err => callback(null, response(err.statusCode, err)))
+} 
+
+// Get a single post
+module.exports.getSinglePost = (event, context, callback) => {
+  const uid = event.pathParameters.uid;
+  const params = {
+    Key:{
+      uid: uid
+    },
+    TableName: postsTable
+  }
+  return db.get(params).promise()
+  .then(res => {
+    if (res.Item) callback(null, response(200, res.Item)) 
+    else callback(null, response(404, {error: "Post not found"})) 
+  })
+  .catch(err => callback(null, response(err.statusCode, err)))
 }
+
 
 // Get post by user
 module.exports.getPostByUser = (event, context, callback) => {

@@ -35,6 +35,13 @@ functions:
           path: /posts
           method: get
           cors: true
+  getSinglePost:
+    handler: handler.getSinglePost
+    events:
+      - http:
+          path: /singlepost/{uid}
+          method: get
+          cors: true
   getPostByUser:
     handler: handler.getPostByUser
     events:
