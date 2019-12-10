@@ -1,0 +1,22 @@
+{
+  "name": "researchpal_api",
+  "version": "1.0.0",
+  "description": "DynamoDB, API Gateway, and Lambda DB with serverless framework",
+  "main": "handler.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jawad727/researchpal_api.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jawad727/researchpal_api/issues"
+  },
+  "homepage": "https://github.com/jawad727/researchpal_api#readme",
+  "dependencies": {
+    "uuid": "^3.3.3"
+  }
+}
