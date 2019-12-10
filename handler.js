@@ -91,7 +91,7 @@ module.exports.updatePost = (event, context, callback) => {
       uid: uid
     },
     TableName: postsTable,
-    ConditionExpression: "attribute_exists(id)",
+    ConditionExpression: "attribute_exists(uid)",
     UpdateExpression: "set " + paramName + " = :v",
     ExpressionAttributeValues: {
       ":v": paramValue 
