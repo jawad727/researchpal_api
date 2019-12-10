@@ -3,6 +3,8 @@ service: researchpal-api
 custom:
   settings:
     POSTS_TABLE: researchpal-posts
+    USERS_TABLE: researchpal-users
+    LIKES_TABLE: researchpal-likes
 
 provider:
   name: aws
@@ -17,22 +19,48 @@ provider:
         - dynamodb:PutItem
         - dynamodb:UpdateItem
         - dynamodb:DeleteItem
+        - dynamodb:Query
+        - dynamodb:BatchGetItem
       Resource:
         - "arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.settings.POSTS_TABLE}"
+        - "arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.settings.USERS_TABLE}"
+        - "arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.settings.LIKES_TABLE}"
+
 
 functions:
   makePost:
     handler: handler.makePost
     events:
-    - http:
-        path: /post
-        method: post
-        cors: true
+      - http:
+          path: /post
+          method: post
+          cors: true
+  createUser:
+    handler: handler.createUser
+    events:
+      - http:
+          path: /user
+          method: post
+          cors: true
+  createliked:
+    handler: handler.createliked
+    events:
+      - http:
+          path: /like
+          method: post
+          cors: true
   getAllPosts:
     handler: handler.getAllPosts
     events:
       - http:
           path: /posts
+          method: get
+          cors: true
+  getAllUsers:
+    handler: handler.getAllUsers
+    events:
+      - http:
+          path: /users
           method: get
           cors: true
   getSinglePost:
@@ -47,6 +75,13 @@ functions:
     events:
       - http:
           path: /poste/{uid}
+          method: get
+          cors: true
+  getLikeByUser:
+    handler: handler.getLikeByUser
+    events:
+      - http:
+          path: /liked/{uid}
           method: get
           cors: true
   updatePost:
@@ -79,9 +114,36 @@ resources:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
         TableName: ${self:custom.settings.POSTS_TABLE}
-
-
-
+    UserTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        AttributeDefinitions:
+        - AttributeName: "uuid"
+          AttributeType: "S"
+        KeySchema:
+        - AttributeName: "uuid"
+          KeyType: "HASH"
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        TableName: ${self:custom.settings.USERS_TABLE}
+    LikesTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        AttributeDefinitions:
+        - AttributeName: "id"
+          AttributeType: "S"
+        - AttributeName: "userid"
+          AttributeType: "S"
+        KeySchema:
+        - AttributeName: "id"
+          KeyType: "HASH"
+        - AttributeName: "userid"
+          KeyType: RANGE
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        TableName: ${self:custom.settings.LIKES_TABLE}
 
 
 

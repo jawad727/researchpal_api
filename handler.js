@@ -5,6 +5,8 @@ const uuid = require("uuid/v4")
 
 
 const postsTable = process.env.POSTS_TABLE
+const usersTable = process.env.USERS_TABLE
+const likesTable = process.env.LIKES_TABLE
 
 // Create a response
 
@@ -47,10 +49,65 @@ module.exports.makePost = (event, context, callback) => {
   .catch(err => response(null, response(err.statusCode, err)));
 }
 
+// Create a User
+
+module.exports.createUser = (event, context, callback) => {
+  const reqBody = JSON.parse(event.body)
+
+  const user = {
+    uuid: reqBody.uuid,
+    createdAt: new Date().toISOString(),
+    Username: reqBody.Username,
+    Email: reqBody.Email,
+    PhoneNumber: reqBody.PhoneNumber,
+    Profpic: "https://i.stack.imgur.com/34AD2.jpg",
+    Header: "https://assets.tumblr.com/images/default_header/optica_pattern_11.png",
+    DisplayName: reqBody.DisplayName,
+    Bio: `Hi, I'm ${reqBody.Username} and I love to read interesting articles!`
+  }
+
+  return db.put({
+    TableName: usersTable,
+    Item: user
+  }).promise().then(() => {
+    callback(null, response(201, user))
+  })
+  .catch(err => response(null, response(err.statusCode, err)));
+}
+
+// Create a Like
+
+module.exports.createliked = (event, context, callback) => {
+  const reqBody = JSON.parse(event.body)
+
+  const liked = { 
+    id: reqBody.id,
+    userid: reqBody.userid //likerID
+  }
+
+  return db.put({
+    TableName: likesTable,
+    Item: liked
+  }).promise().then(() => {
+    callback(null, response(201, liked))
+  })
+  .catch(err => response(null, response(err.statusCode, err)));
+}
+
 // Get all posts
 module.exports.getAllPosts = (event, context, callback) => {
   return db.scan({
     TableName: postsTable
+  }).promise()
+  .then(res => {
+    callback(null, response(201, res.Items))
+  }).catch(err => callback(null, response(err.statusCode, err)))
+} 
+
+// Get all Users
+module.exports.getAllUsers = (event, context, callback) => {
+  return db.scan({
+    TableName: usersTable
   }).promise()
   .then(res => {
     callback(null, response(201, res.Items))
@@ -97,6 +154,61 @@ module.exports.getPostByUser = (event, context, callback) => {
   }).catch(err => callback(null, response(err.statusCode, err)))
 }
 
+
+// Get liked by user
+module.exports.getLikeByUser = (event, context, callback) => {
+  const theuser = event.pathParameters.uid;
+  const params = {
+    
+    ExpressionAttributeNames: {
+      "#userid": "userid"
+    },
+    ExpressionAttributeValues: {
+      ":userid": theuser
+    },
+    FilterExpression: "#userid = :userid",
+    TableName: likesTable
+  }
+
+
+  // var ItemsArray = {}
+
+
+
+
+
+
+  return db.scan(params)
+  .promise()
+  .then(res => {
+
+    
+    
+    var ItemsArray = res.Items.map(item => {
+      return {"id": {
+        S: item["id"]
+      }}
+    })
+    
+    var params = {
+      RequestItems: {
+        postsTable: {
+          Keys: ItemsArray
+        }
+      }
+    }
+
+    callback(null, response(200, params))
+    
+    // return db.batchGetItem(params, function(err, data) {
+    //   if (err) {return callback(null, response(400, err)) }
+    //   else { return callback(null, response(200, data)) }       
+    // })
+
+  }).catch(err => callback(null, response(err.statusCode, err)))
+}
+
+
 // Update a post
 module.exports.updatePost = (event, context, callback) => {
   const uid = event.pathParameters.id;
@@ -124,6 +236,7 @@ module.exports.updatePost = (event, context, callback) => {
   })
   .catch(err => callback(null, response(err.statusCode, err)))
 }
+
 
 // Delete a post
 module.exports.deletePost = (event, context, callback) => {
