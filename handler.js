@@ -171,41 +171,39 @@ module.exports.getLikeByUser = (event, context, callback) => {
   }
 
 
-  // var ItemsArray = {}
-
-
-
-
-
+  // var ItemsArray = null
 
   return db.scan(params)
   .promise()
   .then(res => {
 
-    
+    // callback(null, response(200, res.Items))
     
     var ItemsArray = res.Items.map(item => {
-      return {"id": {
+      return {"uid": {
         S: item["id"]
       }}
     })
-    
-    var params = {
+
+    var params2 = {
       RequestItems: {
         postsTable: {
           Keys: ItemsArray
         }
       }
     }
-
-    callback(null, response(200, params))
     
-    // return db.batchGetItem(params, function(err, data) {
-    //   if (err) {return callback(null, response(400, err)) }
-    //   else { return callback(null, response(200, data)) }       
+    
+    // return db.batchGetItem(params2)
+    // .promise()
+    // .then(res => {
+    // callback(null, response(200, {it: "worked"}))
     // })
+    // .catch(err => callback(null, response(400, {it: "failed"})))
 
-  }).catch(err => callback(null, response(err.statusCode, err)))
+  })
+  .then(res => { callback(null, response(200, {it: "worked"})) })
+  .catch(err => callback(null, response(err.statusCode, err)))
 }
 
 
