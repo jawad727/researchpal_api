@@ -8,6 +8,14 @@ const postsTable = process.env.POSTS_TABLE
 const usersTable = process.env.USERS_TABLE
 const likesTable = process.env.LIKES_TABLE
 
+// Sort function
+
+function sortByDate(a, b){
+  if (a.createdAt > b.createdAt){
+    return -1
+  } else return 1
+}
+
 // Create a response
 
 function response(statusCode, message) {
@@ -37,14 +45,15 @@ module.exports.makePost = (event, context, callback) => {
     PostImage: reqBody.PostImage,
     SiteURL: reqBody.SiteURL,
     Username: reqBody.Username,
-    Comments: []
+    Comments: [],
+    date: new Date().toUTCString()
   }
 
   return db.put({
     TableName: postsTable,
     Item: post
   }).promise().then(() => {
-    callback(null, response(201, post))
+    callback(null, response(200, post))
   })
   .catch(err => response(null, response(err.statusCode, err)));
 }
@@ -63,7 +72,8 @@ module.exports.createUser = (event, context, callback) => {
     Profpic: "https://i.stack.imgur.com/34AD2.jpg",
     Header: "https://assets.tumblr.com/images/default_header/optica_pattern_11.png",
     DisplayName: reqBody.DisplayName,
-    Bio: `Hi, I'm ${reqBody.Username} and I love to read interesting articles!`
+    Bio: `Hi, I'm ${reqBody.Username} and I love to read interesting articles!`,
+    date: new Date().toUTCString()
   }
 
   return db.put({
@@ -80,7 +90,7 @@ module.exports.createUser = (event, context, callback) => {
 module.exports.createliked = (event, context, callback) => {
   const reqBody = JSON.parse(event.body)
 
-  const liked = { 
+  const liked = {
     id: reqBody.id,
     userid: reqBody.userid //likerID
   }
@@ -100,7 +110,7 @@ module.exports.getAllPosts = (event, context, callback) => {
     TableName: postsTable
   }).promise()
   .then(res => {
-    callback(null, response(201, res.Items))
+    callback(null, response(201, res.Items.sort(sortByDate)))
   }).catch(err => callback(null, response(err.statusCode, err)))
 } 
 
@@ -150,7 +160,7 @@ module.exports.getPostByUser = (event, context, callback) => {
   return db.scan(params)
   .promise()
   .then(res => {
-    callback(null, response(200, res.Items))
+    callback(null, response(200, res.Items.sort(sortByDate)))
   }).catch(err => callback(null, response(err.statusCode, err)))
 }
 
@@ -171,38 +181,12 @@ module.exports.getLikeByUser = (event, context, callback) => {
   }
 
 
-  // var ItemsArray = null
-
   return db.scan(params)
   .promise()
   .then(res => {
-
-    // callback(null, response(200, res.Items))
-    
-    var ItemsArray = res.Items.map(item => {
-      return {"uid": {
-        S: item["id"]
-      }}
-    })
-
-    var params2 = {
-      RequestItems: {
-        postsTable: {
-          Keys: ItemsArray
-        }
-      }
-    }
-    
-    
-    // return db.batchGetItem(params2)
-    // .promise()
-    // .then(res => {
-    // callback(null, response(200, {it: "worked"}))
-    // })
-    // .catch(err => callback(null, response(400, {it: "failed"})))
+    callback(null, response(200, res.Items))
 
   })
-  .then(res => { callback(null, response(200, {it: "worked"})) })
   .catch(err => callback(null, response(err.statusCode, err)))
 }
 
@@ -247,6 +231,6 @@ module.exports.deletePost = (event, context, callback) => {
   }
   return db.delete(params)
   .promise()
-  .then(() => callback(null, response(200, { message: "post deleted successfully" })))
+  .then((res) => callback(null, response(200, res)))
   .catch(err => callback(null, response(err.statusCode, err)))
 }

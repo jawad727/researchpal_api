@@ -35,6 +35,13 @@ functions:
           path: /post
           method: post
           cors: true
+  deletePost:
+    handler: handler.deletePost
+    events:
+      - http:
+          path: /post/{id}
+          method: delete
+          cors: true
   createUser:
     handler: handler.createUser
     events:
@@ -90,14 +97,8 @@ functions:
       - http:
           path: /post/{id}
           method: put
-          cors: true 
-  deletePost:
-    handler: handler.deletePost
-    events:
-      - http:
-          path: /post/{id}
-          method: delete
-          cors: true 
+          cors: true
+
 
 resources:
   Resources:
