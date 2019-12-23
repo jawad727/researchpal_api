@@ -77,6 +77,13 @@ functions:
           path: /singlepost/{uid}
           method: get
           cors: true
+  getSingleUser:
+    handler: handler.getSingleUser
+    events:
+      - http:
+          path: /singleuser/{uid}
+          method: get
+          cors: true
   getPostByUser:
     handler: handler.getPostByUser
     events:

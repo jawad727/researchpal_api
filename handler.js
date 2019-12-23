@@ -91,8 +91,9 @@ module.exports.createliked = (event, context, callback) => {
   const reqBody = JSON.parse(event.body)
 
   const liked = {
-    id: reqBody.id,
-    userid: reqBody.userid //likerID
+    id: uuid(),
+    userid: reqBody.userid, //likerID
+    postid: reqBody.postid
   }
 
   return db.put({
@@ -141,6 +142,23 @@ module.exports.getSinglePost = (event, context, callback) => {
   .catch(err => callback(null, response(err.statusCode, err)))
 }
 
+// Get a single user
+module.exports.getSingleUser = (event, context, callback) => {
+  const uid = event.pathParameters.uid;
+  const params = {
+    Key:{
+      uuid: uid
+    },
+    TableName: usersTable
+  }
+  return db.get(params).promise()
+  .then(res => {
+    if (res.Item) callback(null, response(200, res.Item)) 
+    else callback(null, response(404, {error: "User not found"})) 
+  })
+  .catch(err => callback(null, response(err.statusCode, err)))
+}
+
 
 // Get post by user
 module.exports.getPostByUser = (event, context, callback) => {
@@ -179,8 +197,6 @@ module.exports.getLikeByUser = (event, context, callback) => {
     FilterExpression: "#userid = :userid",
     TableName: likesTable
   }
-
-
   return db.scan(params)
   .promise()
   .then(res => {
@@ -234,3 +250,4 @@ module.exports.deletePost = (event, context, callback) => {
   .then((res) => callback(null, response(200, res)))
   .catch(err => callback(null, response(err.statusCode, err)))
 }
+
